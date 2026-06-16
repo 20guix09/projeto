@@ -1,0 +1,25 @@
+{
+  "name": "projeto",
+  "version": "1.0.0",
+  "description": "Projeto do curso. API backend do meu projeto integrador",
+  "main": "index.js",
+  "scripts": {
+      "dev": "nodemon index.js",
+      "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/20guix09/projeto.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/20guix09/projeto/issues"
+  },
+  "homepage": "https://github.com/20guix09/projeto#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
