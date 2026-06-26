@@ -1,27 +1,7 @@
 const express = require('express')
-const app = express()
-const PORT = process.env.PORT || 3000
+const router = express.Router()
 
-// Habilita a leitura de JSON no corpo (Body) das requisições
-app.use(express.json())
-
-// ==========================================
-// 🛡️ SEU NOVO MIDDLEWARE DE LOG (AULA 06)
-// ==========================================
-// Ele intercepta a requisição, mostra no terminal e passa adiante
-app.use((req, res, next) => {
-  const horaAtual = new Date().toISOString()
-  
-  // Mostra no terminal o método (GET/POST/etc), a URL acessada e o horário
-  console.log(`[${horaAtual}] ${req.method} para a rota ${req.url}`)
-  
-  // CRÍTICO: Avança para a rota correspondente. Se esquecer o next(), a API trava!
-  next() 
-})
-
-// ==========================================
-// SEU BANCO DE DADOS EM MEMÓRIA
-// ==========================================
+// Seu banco de dados em memória foi movido para cá
 const bancoDeDadosFrases = [
   {
     "id": 1,
@@ -50,39 +30,32 @@ const bancoDeDadosFrases = [
   }
 ];
 
-// ==========================================
-// ROTAS DO SEU CRUD (AULAS ANTERIORES)
-// ==========================================
-
-// GET global com filtro opcional por query param (?categoria=...)
-app.get('/frases', (req, res) => {
+// ROTA GET global (repare que a rota virou apenas '/' porque o prefixo '/frases' vai ficar no index.js)
+router.get('/', (req, res) => {
   const { categoria } = req.query
-
   if (categoria) {
     const filtradas = bancoDeDadosFrases.filter(
       f => f.categoria.toLowerCase() === categoria.toLowerCase()
     )
     return res.json(filtradas)
   }
-
   res.json(bancoDeDadosFrases)
 })
 
-// GET por ID
-app.get('/frases/:id', (req, res) => {
+// ROTA GET por ID
+router.get('/:id', (req, res) => {
   const idBusca = Number(req.params.id)
   const fraseEncontrada = bancoDeDadosFrases.find(f => f.id === idBusca)
-
   if (!fraseEncontrada) {
     return res.status(404).json({ erro: 'Frase não encontrada' })
   }
-
   res.json(fraseEncontrada)
 })
 
-// POST: Criar frase
-app.post('/frases', (req, res) => {
-  const { frase, categoria } = req.body
+// ROTA POST
+router.post('/', (req, res) => {
+  const { frase, category } = req.body // adaptado para o padrão
+  const categoria = req.body.categoria || category
 
   if (!frase || !categoria) {
     return res.status(400).json({ erro: "Frase e categoria são obrigatórias" })
@@ -93,44 +66,35 @@ app.post('/frases', (req, res) => {
     frase,
     categoria
   }
-
   bancoDeDadosFrases.push(novaFrase)
   res.status(201).json(novaFrase)
 })
 
-// PUT: Atualizar frase
-app.put('/frases/:id', (req, res) => {
+// ROTA PUT
+router.put('/:id', (req, res) => {
   const id = Number(req.params.id)
   const index = bancoDeDadosFrases.findIndex(f => f.id === id)
-
   if (index === -1) {
     return res.status(404).json({ erro: 'Frase não encontrada' })
   }
-
   const { frase, categoria } = req.body
-
   if (!frase || !categoria) {
-    return res.status(400).json({ erro: "Frase e categoria são obrigatórias para atualizar" })
+    return res.status(400).json({ erro: "Frase e categoria são obrigatórias" })
   }
-
   bancoDeDadosFrases[index] = { id, frase, categoria }
   res.json(bancoDeDadosFrases[index])
 })
 
-// DELETE: Remover frase
-app.delete('/frases/:id', (req, res) => {
+// ROTA DELETE
+router.delete('/:id', (req, res) => {
   const id = Number(req.params.id)
   const index = bancoDeDadosFrases.findIndex(f => f.id === id)
-
   if (index === -1) {
     return res.status(404).json({ erro: 'Frase não encontrada' })
   }
-
   bancoDeDadosFrases.splice(index, 1)
   res.status(204).send()
 })
 
-// Inicialização do servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`)
-})
+// OBRIGATÓRIO: Exportar o router para que o index.js consiga importá-lo
+module.exports = router
