@@ -33,11 +33,14 @@ const bancoDeDadosFrases = [
   }
 ];
 
-// ROTA GET: Lista todas as frases OU filtra por categoria usando Query Params (?categoria=...)
-app.get('/frases', (req, res) => {
-  const { categoria } = req.query // Captura o parâmetro opcional da URL
+// ==========================================
+// 1. ROTAS GET (READ - LER)
+// ==========================================
 
-  // Se o usuário passou uma categoria na URL, filtramos o array
+// GET global com filtro opcional por query param (?categoria=...)
+app.get('/frases', (req, res) => {
+  const { categoria } = req.query
+
   if (categoria) {
     const filtradas = bancoDeDadosFrases.filter(
       f => f.categoria.toLowerCase() === categoria.toLowerCase()
@@ -45,28 +48,24 @@ app.get('/frases', (req, res) => {
     return res.json(filtradas)
   }
 
-  // Se não passou nenhuma categoria, retorna a lista completa
   res.json(bancoDeDadosFrases)
 })
 
-// ROTA GET por ID: Busca uma frase específica usando Route Params (:id)
+// GET por ID para buscar uma única frase
 app.get('/frases/:id', (req, res) => {
-  // req.params.id sempre chega como texto (string), precisamos converter para Número
   const idBusca = Number(req.params.id)
-
-  // Procura a frase com o ID correspondente
   const fraseEncontrada = bancoDeDadosFrases.find(f => f.id === idBusca)
 
-  // Se não encontrar a frase, retorna o erro 404 (Not Found)
   if (!fraseEncontrada) {
     return res.status(404).json({ erro: 'Frase não encontrada' })
   }
 
-  // Se encontrar, retorna a frase
   res.json(fraseEncontrada)
 })
 
-// ROTA POST: Cria uma nova frase (Mantida da aula anterior)
+// ==========================================
+// 2. ROTA POST (CREATE - CRIAR)
+// ==========================================
 app.post('/frases', (req, res) => {
   const { frase, categoria } = req.body
 
@@ -75,7 +74,7 @@ app.post('/frases', (req, res) => {
   }
 
   const novaFrase = {
-    id: bancoDeDadosFrases.length + 1,
+    id: bancoDeDadosFrases.length > 0 ? bancoDeDadosFrases[bancoDeDadosFrases.length - 1].id + 1 : 1,
     frase,
     categoria
   }
@@ -84,6 +83,51 @@ app.post('/frases', (req, res) => {
   res.status(201).json(novaFrase)
 })
 
+// ==========================================
+// 3. ROTA PUT (UPDATE - ATUALIZAR) — NOVA!
+// ==========================================
+app.put('/frases/:id', (req, res) => {
+  const id = Number(req.params.id) // O ID sempre chega como string, convertemos para número
+  const index = bancoDeDadosFrases.findIndex(f => f.id === id) // Procura a posição no array
+
+  // Se o findIndex retornar -1, significa que não achou o ID
+  if (index === -1) {
+    return res.status(404).json({ erro: 'Frase não encontrada' })
+  }
+
+  const { frase, categoria } = req.body
+
+  // Validação dos campos obrigatórios
+  if (!frase || !categoria) {
+    return res.status(400).json({ erro: "Frase e categoria são obrigatórias para atualizar" })
+  }
+
+  // Substitui o item na posição encontrada, segurando o ID original
+  bancoDeDadosFrases[index] = { id, frase, categoria }
+
+  // Retorna o item atualizado com o status 200 (OK)
+  res.json(bancoDeDadosFrases[index])
+})
+
+// ==========================================
+// 4. ROTA DELETE (DELETE - DELETAR) — NOVA!
+// ==========================================
+app.delete('/frases/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const index = bancoDeDadosFrases.findIndex(f => f.id === id)
+
+  if (index === -1) {
+    return res.status(404).json({ erro: 'Frase não encontrada' })
+  }
+
+  // Remove 1 elemento a partir da posição encontrada
+  bancoDeDadosFrases.splice(index, 1)
+
+  // Status 204 significa "No Content" (Sucesso, mas sem corpo na resposta)
+  res.status(204).send()
+})
+
+// Inicialização do servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`)
 })
